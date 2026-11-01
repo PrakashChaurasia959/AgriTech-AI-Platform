@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-gray-900 font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-gray-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-300 rounded-full;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-primary-700;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg;
+  }
+
+  .dark .glass-card {
+    @apply bg-gray-800/80 border-gray-700;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-primary text-white font-semibold rounded-xl transition-all hover:bg-primary-700 hover:shadow-lg active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-white text-primary border-2 border-primary font-semibold rounded-xl transition-all hover:bg-primary-50 active:scale-95;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-200;
+  }
+
+  .dark .input-field {
+    @apply bg-gray-800 border-gray-600 text-white placeholder-gray-500;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-md border border-gray-100 p-6 transition-all hover:shadow-lg;
+  }
+
+  .dark .card {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 font-medium transition-all hover:bg-primary-50 hover:text-primary-700 cursor-pointer;
+  }
+
+  .sidebar-link-active {
+    @apply bg-primary text-white hover:bg-primary-700 hover:text-white;
+  }
+
+  .dark .sidebar-link {
+    @apply text-gray-300 hover:bg-gray-700;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-accent-orange bg-clip-text text-transparent;
+  }
+
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-500 { animation-delay: 500ms; }
+}

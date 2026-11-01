@@ -1,0 +1,223 @@
+"""PDF report generation service using ReportLab."""
+import logging
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+)
+from reportlab.lib.enums import TA_CENTER
+
+logger = logging.getLogger(__name__)
+
+GREEN = colors.HexColor("#16A34A")
+DARK_GREEN = colors.HexColor("#14532D")
+LIGHT_GREEN = colors.HexColor("#DCFCE7")
+LIGHT_GRAY = colors.HexColor("#F8FAFC")
+ORANGE = colors.HexColor("#F97316")
+
+
+def _build_styles():
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(
+        name="CustomTitle",
+        parent=styles["Title"],
+        fontSize=24,
+        textColor=DARK_GREEN,
+        spaceAfter=20,
+        alignment=TA_CENTER,
+    ))
+    styles.add(ParagraphStyle(
+        name="SectionHeader",
+        parent=styles["Heading2"],
+        fontSize=14,
+        textColor=GREEN,
+        spaceBefore=16,
+        spaceAfter=8,
+    ))
+    styles.add(ParagraphStyle(
+        name="CustomLabel",
+        parent=styles["Normal"],
+        fontSize=10,
+        textColor=colors.grey,
+    ))
+    return styles
+
+
+def generate_disease_report(prediction: dict, user: dict) -> bytes:
+    """Generate a PDF report for a disease detection result."""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.8 * inch, bottomMargin=0.8 * inch)
+    styles = _build_styles()
+    story = []
+
+    story.append(Paragraph("Smart Agriculture System", styles["CustomTitle"]))
+    story.append(Paragraph("Crop Disease Detection Report", styles["SectionHeader"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    # User info
+    user_info = [
+        ["Farmer Name", user.get("full_name", "N/A")],
+        ["Email", user.get("email", "N/A")],
+        ["Report Date", prediction.get("created_at", "").strftime("%Y-%m-%d %H:%M") if hasattr(prediction.get("created_at"), "strftime") else str(prediction.get("created_at", ""))],
+    ]
+    t = Table(user_info, colWidths=[1.5 * inch, 4 * inch])
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, -1), LIGHT_GREEN),
+        ("TEXTCOLOR", (0, 0), (0, -1), DARK_GREEN),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 0.3 * inch))
+
+    # Detection results
+    story.append(Paragraph("Detection Results", styles["SectionHeader"]))
+    is_healthy = prediction.get("is_healthy", False)
+    status = "HEALTHY" if is_healthy else "DISEASE DETECTED"
+    status_color = GREEN if is_healthy else ORANGE
+
+    results = [
+        ["Crop Type", prediction.get("crop_type", "N/A")],
+        ["Disease Name", prediction.get("disease_name", "N/A")],
+        ["Status", status],
+        ["Confidence", f"{prediction.get('confidence', 0) * 100:.1f}%"],
+        ["Detection Mode", "AI Model (Demo)" if prediction.get("is_demo_mode") else "AI Model (Trained)"],
+    ]
+    t2 = Table(results, colWidths=[1.5 * inch, 4 * inch])
+    t2.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, -1), LIGHT_GRAY),
+        ("TEXTCOLOR", (0, 0), (-1, -1), colors.black),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("TEXTCOLOR", (1, 2), (1, 2), status_color),
+        ("FONTNAME", (1, 2), (1, 2), "Helvetica-Bold"),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+    ]))
+    story.append(t2)
+    story.append(Spacer(1, 0.3 * inch))
+
+    # Symptoms
+    symptoms = prediction.get("symptoms", [])
+    if symptoms:
+        story.append(Paragraph("Symptoms", styles["SectionHeader"]))
+        for s in symptoms:
+            story.append(Paragraph(f"• {s}", styles["Normal"]))
+        story.append(Spacer(1, 0.2 * inch))
+
+    # Causes
+    causes = prediction.get("causes", [])
+    if causes:
+        story.append(Paragraph("Causes", styles["SectionHeader"]))
+        for c in causes:
+            story.append(Paragraph(f"• {c}", styles["Normal"]))
+        story.append(Spacer(1, 0.2 * inch))
+
+    # Treatment
+    treatment = prediction.get("treatment", [])
+    if treatment:
+        story.append(Paragraph("Treatment Recommendations", styles["SectionHeader"]))
+        for tr in treatment:
+            story.append(Paragraph(f"• {tr}", styles["Normal"]))
+        story.append(Spacer(1, 0.2 * inch))
+
+    # Prevention
+    prevention = prediction.get("prevention", [])
+    if prevention:
+        story.append(Paragraph("Prevention Methods", styles["SectionHeader"]))
+        for p in prevention:
+            story.append(Paragraph(f"• {p}", styles["Normal"]))
+
+    story.append(Spacer(1, 0.5 * inch))
+    story.append(Paragraph(
+        "This report is generated by the Smart Agriculture AI System. "
+        "Predictions are estimates based on AI analysis and should be "
+        "validated with local agricultural experts.",
+        styles["CustomLabel"],
+    ))
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+
+def generate_crop_report(recommendation: dict, user: dict) -> bytes:
+    """Generate a PDF report for a crop recommendation."""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.8 * inch, bottomMargin=0.8 * inch)
+    styles = _build_styles()
+    story = []
+
+    story.append(Paragraph("Smart Agriculture System", styles["CustomTitle"]))
+    story.append(Paragraph("Crop Recommendation Report", styles["SectionHeader"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    story.append(Paragraph(f"Farmer: {user.get('full_name', 'N/A')}", styles["Normal"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    story.append(Paragraph("Recommended Crops", styles["SectionHeader"]))
+    recs = recommendation.get("recommendations", [])
+    for i, rec in enumerate(recs, 1):
+        story.append(Paragraph(f"{i}. {rec['crop']} (Confidence: {rec['confidence']*100:.1f}% - {rec['suitability']})", styles["Normal"]))
+        story.append(Paragraph(f"   {rec['description']}", styles["Normal"]))
+        story.append(Spacer(1, 0.1 * inch))
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+
+def generate_yield_report(prediction: dict, user: dict) -> bytes:
+    """Generate a PDF report for a yield prediction."""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.8 * inch, bottomMargin=0.8 * inch)
+    styles = _build_styles()
+    story = []
+
+    story.append(Paragraph("Smart Agriculture System", styles["CustomTitle"]))
+    story.append(Paragraph("Crop Yield Prediction Report", styles["SectionHeader"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    story.append(Paragraph(f"Farmer: {user.get('full_name', 'N/A')}", styles["Normal"]))
+    story.append(Spacer(1, 0.2 * inch))
+
+    results = [
+        ["Crop Type", prediction.get("crop_type", "N/A")],
+        ["Predicted Yield", f"{prediction.get('predicted_yield', 0):.0f} kg/hectare"],
+        ["Predicted Production", f"{prediction.get('predicted_production', 0):.0f} kg"],
+        ["Suitability", prediction.get("suitability", "N/A")],
+    ]
+    t = Table(results, colWidths=[1.5 * inch, 4 * inch])
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, -1), LIGHT_GREEN),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 0.2 * inch))
+
+    suggestions = prediction.get("improvement_suggestions", [])
+    if suggestions:
+        story.append(Paragraph("Improvement Suggestions", styles["SectionHeader"]))
+        for s in suggestions:
+            story.append(Paragraph(f"• {s}", styles["Normal"]))
+
+    story.append(Spacer(1, 0.3 * inch))
+    story.append(Paragraph(
+        "This is an estimate based on machine learning analysis. "
+        "Actual yields may vary due to weather, pests, and management practices.",
+        styles["CustomLabel"],
+    ))
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes

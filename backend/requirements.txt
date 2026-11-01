@@ -1,0 +1,59 @@
+# ============================================================
+#  SmartAgri ML — Backend Dependencies
+#  Install:  pip install -r requirements.txt
+# ============================================================
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
+python-multipart==0.0.6          # required for UploadFile / Form
+
+# ── Database ──────────────────────────────────────────────────────────────────
+motor==3.3.2                     # async MongoDB driver
+pymongo==4.6.1
+
+# ── Auth / security ───────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0 # JWT
+passlib[bcrypt]==1.7.4           # password hashing
+email-validator==2.1.0           # Pydantic email validation
+
+# ── HTTP client ───────────────────────────────────────────────────────────────
+httpx==0.25.2                    # async HTTP (weather API, geocoding)
+
+# ── Config ────────────────────────────────────────────────────────────────────
+python-dotenv==1.0.0
+
+# ── Data / ML ─────────────────────────────────────────────────────────────────
+numpy==1.26.2
+pandas==2.1.4
+scikit-learn==1.3.2              # Random Forest crop recommendation
+Pillow==10.1.0                   # image preprocessing (always required)
+opencv-python-headless==4.8.1.78 # demo-mode colour analysis (always required)
+joblib==1.3.2                    # model serialisation
+
+# ── Deep learning (disease detection — production mode) ───────────────────────
+#
+# Python 3.12+ users:  tensorflow may not have a pre-built wheel yet.
+# Install the CPU-only build if you don't have a GPU:
+#
+#   pip install tensorflow-cpu
+#
+# or the full GPU build:
+#
+#   pip install tensorflow
+#
+# Both are intentionally left commented out here so that users on Python 3.14
+# (which lacks a wheel) don't get a hard install failure.
+# The application falls back gracefully to demo mode when TF is absent.
+#
+# tensorflow-cpu   # uncomment for CPU inference
+# tensorflow       # uncomment for GPU inference
+
+# ── Report generation ─────────────────────────────────────────────────────────
+reportlab==4.0.7                 # PDF generation
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==7.4.4
+pytest-asyncio==0.23.3
