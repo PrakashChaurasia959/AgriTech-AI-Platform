@@ -1,4 +1,5 @@
 """Disease detection service - handles prediction and history persistence."""
+import asyncio
 import logging
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -22,8 +23,9 @@ def validate_image_file(filename: str, file_size: int) -> str | None:
 
 
 async def predict_disease(image_bytes: bytes, crop_type: str, user_id: str) -> dict:
-    """Run disease detection and save result to database."""
-    result = classify_disease(image_bytes, crop_type)
+    """Run disease detection (in a thread) and save result to database."""
+    # Run CPU-bound CNN inference in a thread so the event loop is not blocked
+    result = await asyncio.to_thread(classify_disease, image_bytes, crop_type)
 
     db = get_db()
     prediction_doc = {

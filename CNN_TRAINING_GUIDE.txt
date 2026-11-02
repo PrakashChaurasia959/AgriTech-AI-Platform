@@ -1,0 +1,24 @@
+# PlantVillage MobileNetV2 Training
+# =================================
+#
+# 1. Configure Kaggle credentials with the Kaggle CLI. Keep kaggle.json outside
+#    the repository, at %USERPROFILE%\.kaggle\kaggle.json.
+#
+# 2. From the backend directory, run:
+#    .\venv\Scripts\python.exe train_plant_disease_cnn.py
+#
+# The script authenticates with Kaggle, downloads the real
+# abdallahalidev/plantvillage-dataset, validates its 38 image classes, then
+# creates stratified 70/15/15 train/validation/test splits. It trains and
+# fine-tunes MobileNetV2 using the same preprocessing used by the FastAPI
+# inference path.
+#
+# The trained model is written to the configured DISEASE_MODEL_PATH. Adjacent
+# .classes.json and .metrics.json files preserve the class-index mapping and
+# held-out test accuracy, macro precision, macro recall, macro F1, and
+# confusion matrix. The script does not change .env or write API tokens.
+#
+# Confirm DISEASE_MODEL_MODE=production and that DISEASE_MODEL_PATH points to
+# this model, then restart FastAPI so it loads the newly trained weights.
+# Training duration depends on the CPU/GPU, disk, and image throughput; no
+# accuracy or completion-time target is assumed in advance.

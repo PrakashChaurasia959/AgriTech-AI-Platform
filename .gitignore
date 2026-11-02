@@ -25,9 +25,13 @@ ENV/
 # ---- ML Model Files ----
 *.joblib
 *.h5
+*.keras
 *.pkl
 *.tflite
 backend/app/ml/*.joblib
+
+# Downloaded training data
+/datasets/plantvillage/
 
 # ---- Node.js / Frontend ----
 node_modules/

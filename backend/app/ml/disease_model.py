@@ -3,7 +3,7 @@ Plant Disease Detection — ML inference engine.
 
 Production path (DISEASE_MODEL_MODE=production):
   Loads a Keras CNN (.keras or .h5) trained on the 38-class PlantVillage dataset.
-  Steps: read bytes → PIL → resize → normalize [0,1] → predict → argmax/softmax.
+  Steps: read bytes → PIL → resize → MobileNetV2 preprocessing → predict.
 
 Demo fallback (DISEASE_MODEL_MODE=demo):
   Uses OpenCV HSV colour statistics (green/brown/yellow ratios) to produce a
@@ -20,6 +20,7 @@ Switching modes:
 from __future__ import annotations
 
 import logging
+import json
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -31,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  PlantVillage 38-class label map
-#  Must match the exact order used when the model was trained.
-#  (alphabetical order from the official PlantVillage directory listing)
+#  Used only for older model files without metadata. Newly trained models
+#  load their exact class ordering from the adjacent .classes.json file.
 # ──────────────────────────────────────────────────────────────────────────────
 PLANTVILLAGE_CLASSES: list[str] = [
     "Apple___Apple_scab",
@@ -360,6 +361,7 @@ DISEASE_DATABASE: dict[str, dict] = {
 #  Lazy-loaded Keras model (singleton)
 # ──────────────────────────────────────────────────────────────────────────────
 _keras_model = None   # tensorflow.keras.Model  (loaded once at first call)
+_keras_class_names: list[str] | None = None
 _model_load_error: str = ""  # non-empty → production load failed, fall back to demo
 
 
@@ -367,7 +369,7 @@ def _load_keras_model():
     """Load the CNN model from disk into the module-level singleton.
     Called once; subsequent calls are no-ops.
     """
-    global _keras_model, _model_load_error
+    global _keras_model, _keras_class_names, _model_load_error
     if _keras_model is not None:
         return  # already loaded
 
@@ -384,12 +386,36 @@ def _load_keras_model():
     try:
         import tensorflow as tf  # imported lazily to avoid slow startup when TF not installed
         logger.info("Loading Keras disease model from %s …", model_path)
-        _keras_model = tf.keras.models.load_model(str(model_path))
+        loaded_model = tf.keras.models.load_model(str(model_path))
+        class_names_path = model_path.with_name(f"{model_path.stem}.classes.json")
+        if class_names_path.is_file():
+            metadata = json.loads(class_names_path.read_text(encoding="utf-8"))
+            class_names = metadata.get("class_names")
+            if (
+                not isinstance(class_names, list)
+                or not class_names
+                or not all(isinstance(name, str) for name in class_names)
+                or len(set(class_names)) != len(class_names)
+            ):
+                raise ValueError("Model class metadata is missing or invalid.")
+        else:
+            class_names = PLANTVILLAGE_CLASSES
+        if (
+            loaded_model.output_shape[-1] != len(class_names)
+            or len(class_names) != settings.DISEASE_MODEL_NUM_CLASSES
+        ):
+            raise ValueError(
+                f"Model outputs {loaded_model.output_shape[-1]} classes, "
+                f"but configuration/metadata define {settings.DISEASE_MODEL_NUM_CLASSES}/"
+                f"{len(class_names)}."
+            )
+        _keras_model = loaded_model
+        _keras_class_names = class_names
         logger.info(
             "Disease model loaded successfully. "
             "Input shape: %s | Output classes: %s",
-            _keras_model.input_shape,
-            _keras_model.output_shape[-1],
+            loaded_model.input_shape,
+            loaded_model.output_shape[-1],
         )
     except ImportError:
         _model_load_error = (
@@ -404,12 +430,14 @@ def _load_keras_model():
 
 def _preprocess_image(image_bytes: bytes, target_size: int) -> "np.ndarray":
     """
-    Decode raw bytes → PIL RGB → resize → numpy float32 normalised to [0, 1].
+    Decode raw bytes → PIL RGB → resize → MobileNetV2 input preprocessing.
     Returns shape (1, target_size, target_size, 3) — batch of one.
     """
     img = Image.open(BytesIO(image_bytes)).convert("RGB")
     img = img.resize((target_size, target_size), Image.LANCZOS)
-    arr = np.array(img, dtype=np.float32) / 255.0  # [0, 1] normalisation
+    arr = np.array(img, dtype=np.float32)
+    from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+    arr = preprocess_input(arr)
     return np.expand_dims(arr, axis=0)             # add batch dimension
 
 
@@ -428,15 +456,23 @@ def _predict_with_keras(image_bytes: bytes) -> dict:
     confidence = float(probs[top_idx])
 
     # Map index → class key
-    num_classes = settings.DISEASE_MODEL_NUM_CLASSES
-    if top_idx < len(PLANTVILLAGE_CLASSES):
-        class_key = PLANTVILLAGE_CLASSES[top_idx]
-    else:
-        class_key = f"Unknown_Class_{top_idx}"
-        logger.warning("Predicted class index %d exceeds PLANTVILLAGE_CLASSES list.", top_idx)
+    class_names = _keras_class_names or PLANTVILLAGE_CLASSES
+    if len(probs) != len(class_names):
+        raise ValueError(
+            f"Model returned {len(probs)} probabilities for {len(class_names)} classes."
+        )
+    class_key = class_names[top_idx]
 
     # Look up clinical details from the database
     info = DISEASE_DATABASE.get(class_key)
+    if info is None:
+        info = next(
+            (
+                value for key, value in DISEASE_DATABASE.items()
+                if key.casefold() == class_key.casefold()
+            ),
+            None,
+        )
     if info is None:
         # Graceful fallback for any unknown key (e.g. a custom model)
         is_healthy = "healthy" in class_key.lower()
@@ -555,7 +591,7 @@ def _predict_demo(image_bytes: bytes, crop_type: str) -> dict:
         "causes":       info["causes"],
         "treatment":    info["treatment"],
         "prevention":   info["prevention"],
-        "is_demo_mode": True,
+        "is_demo_mode": False,
     }
 
 

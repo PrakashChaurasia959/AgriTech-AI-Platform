@@ -31,7 +31,16 @@ export default function Register() {
       toast.success('Account created successfully!');
       navigate('/app');
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Registration failed');
+      const detail: unknown = err.response?.data?.detail;
+      const messages = Array.isArray(detail)
+        ? detail.map((item: unknown) => {
+            if (typeof item !== 'object' || item === null || !('msg' in item)) return '';
+            return typeof item.msg === 'string' ? item.msg : '';
+          }).filter(Boolean).join('\n')
+        : '';
+      toast.error(
+        typeof detail === 'string' ? detail : messages || 'Registration failed'
+      );
     } finally {
       setLoading(false);
     }

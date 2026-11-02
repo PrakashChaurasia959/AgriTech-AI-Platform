@@ -1,4 +1,4 @@
-"""Pytest configuration and fixtures for integration tests.
+r"""Pytest configuration and fixtures for integration tests.
 
 Tests run against the LIVE Uvicorn server at http://localhost:8000 using
 the synchronous 'requests' library.
@@ -14,11 +14,12 @@ Rationale:
     cd backend
     .\venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 """
+import os
 import uuid
 import pytest
 import requests
 
-BASE = "http://localhost:8000"
+BASE = os.environ.get("SMARTAGRI_API_BASE_URL", "http://localhost:8000")
 
 
 @pytest.fixture(scope="session")

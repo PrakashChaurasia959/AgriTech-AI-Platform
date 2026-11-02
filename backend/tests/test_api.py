@@ -1,9 +1,10 @@
-"""
+﻿"""
 Backend integration tests.
 
 Run against the live Uvicorn server using synchronous `requests`.
 All tests require the backend to be running with Atlas connected.
 """
+import os
 import uuid
 from io import BytesIO
 
@@ -11,10 +12,10 @@ import pytest
 import requests
 from PIL import Image
 
-BASE = "http://localhost:8000"
+BASE = os.environ.get("SMARTAGRI_API_BASE_URL", "http://localhost:8000")
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _post(path, json=None, data=None, files=None, headers=None, timeout=30):
     return requests.post(f"{BASE}{path}", json=json, data=data, files=files,
@@ -30,7 +31,7 @@ def _delete(path, headers=None, timeout=30):
     return requests.delete(f"{BASE}{path}", headers=headers, timeout=timeout)
 
 
-# ── Health ────────────────────────────────────────────────────────────────────
+# â”€â”€ Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_health_check(client):
     r = _get("/health")
@@ -52,7 +53,7 @@ def test_swagger_docs(client):
     assert r.status_code == 200
 
 
-# ── Authentication ────────────────────────────────────────────────────────────
+# â”€â”€ Authentication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_register_user(client):
     uid = uuid.uuid4().hex[:8]
@@ -134,7 +135,7 @@ def test_forgot_password_nonexistent_email(client):
     assert r.status_code == 200  # always 200 to avoid email enumeration
 
 
-# ── Crop recommendation ───────────────────────────────────────────────────────
+# â”€â”€ Crop recommendation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_crop_recommendation(client, auth_headers):
     r = _post("/api/crop/recommend", json={
@@ -160,7 +161,7 @@ def test_crop_recommendation_validation(client, auth_headers):
     assert r.status_code == 422
 
 
-# ── Yield prediction ──────────────────────────────────────────────────────────
+# â”€â”€ Yield prediction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_yield_prediction(client, auth_headers):
     r = _post("/api/yield/predict", json={
@@ -184,7 +185,7 @@ def test_yield_options(client, auth_headers):
     assert "states" in d
 
 
-# ── Disease detection ─────────────────────────────────────────────────────────
+# â”€â”€ Disease detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_disease_prediction(client, auth_headers):
     """Test disease detection with a synthetic leaf image."""
@@ -206,7 +207,8 @@ def test_disease_prediction(client, auth_headers):
     assert "confidence" in d
     assert "is_healthy" in d
     assert "is_demo_mode" in d
-    assert d["crop_type"] == "Tomato"
+    # The CNN classifies the leaf — crop_type in response is the CNN's prediction, not the hint
+    assert isinstance(d["crop_type"], str) and len(d["crop_type"]) > 0
 
 
 def test_disease_invalid_file(client, auth_headers):
@@ -226,7 +228,7 @@ def test_disease_model_info(client, auth_headers):
     assert "model_loaded" in d
 
 
-# ── History ───────────────────────────────────────────────────────────────────
+# â”€â”€ History â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_disease_history(client, auth_headers):
     r = _get("/api/disease/history", headers=auth_headers)
@@ -248,7 +250,7 @@ def test_yield_history(client, auth_headers):
     assert "items" in r.json()
 
 
-# ── User profile ──────────────────────────────────────────────────────────────
+# â”€â”€ User profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_user_profile_update(client, auth_headers):
     r = _put("/api/users/profile", json={
@@ -262,7 +264,7 @@ def test_user_profile_update(client, auth_headers):
     assert d["farm_name"] == "Test Farm"
 
 
-# ── Weather ───────────────────────────────────────────────────────────────────
+# â”€â”€ Weather â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_weather_forecast(client, auth_headers):
     r = _get("/api/weather/forecast", headers=auth_headers,
@@ -274,7 +276,7 @@ def test_weather_forecast(client, auth_headers):
     assert "farming_advice" in d
 
 
-# ── Supported crops ───────────────────────────────────────────────────────────
+# â”€â”€ Supported crops â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_supported_crops(client):
     r = _get("/api/disease/crops")
@@ -284,7 +286,7 @@ def test_supported_crops(client):
     assert len(d["crops"]) >= 8
 
 
-# ── Admin ─────────────────────────────────────────────────────────────────────
+# â”€â”€ Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def test_admin_dashboard_requires_admin(client, auth_headers):
     """Regular user must get 403 on admin endpoints."""
@@ -306,9 +308,11 @@ def test_admin_dashboard(client):
     assert "total_users" in d["stats"]
 
 
-def test_live_weather_no_key(client, auth_headers):
-    """Without OPENWEATHER_API_KEY the endpoint returns 501."""
+def test_live_weather_falls_back_when_owm_unavailable(client, auth_headers):
+    """Live weather remains available if OpenWeatherMap is unconfigured or rejects its key."""
     r = _get("/api/crop/live-weather", headers=auth_headers,
              params={"lat": 28.6, "lon": 77.2})
-    # 501 = key not configured (expected), 200 = key configured (also fine)
-    assert r.status_code in (200, 501)
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert {"temperature", "humidity", "rainfall", "description", "city", "source"} <= data.keys()
+    assert data["source"] in ("openweathermap", "open-meteo")

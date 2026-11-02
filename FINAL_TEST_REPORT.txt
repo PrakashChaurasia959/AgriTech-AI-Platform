@@ -1,0 +1,84 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261102230441
+Username: PRAKASH\praka
+RunAs User: PRAKASH\praka
+Configuration Name: 
+Machine: PRAKASH (Microsoft Windows NT 10.0.26300.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\praka\AppData\Local\Programs\Microsoft VS Code\2c33b50b16\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 22128
+PSVersion: 5.1.26100.9818
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9818
+BuildVersion: 10.0.26100.9818
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\praka\Desktop\SmartAgri-ML\FINAL_TEST_REPORT.txt
+
+========================================
+ AGRIVISION AI - COMPLETE PROJECT AUDIT
+========================================
+
+[1] BACKEND HEALTH CHECK
+
+
+status             : healthy
+service            : Smart Agriculture API
+database           : atlas
+database_connected : True
+
+
+
+
+[2] DATABASE STATUS
+
+
+status             : healthy
+service            : Smart Agriculture API
+database           : atlas
+database_connected : True
+
+
+
+
+[3] CNN MODEL STATUS
+
+
+mode          : production
+model_loaded  : True
+model_path    : ../ml_models/agrivision_model.h5
+num_classes   : 38
+input_size    : 256
+error_message :
+
+
+
+
+[4] MODEL FILE CHECK
+
+
+[5] BACKEND AUTOMATED TESTS
+
+
+[6] TYPESCRIPT CHECK
+node_modules not found.
+
+[7] PRODUCTION BUILD
+
+
+[8] FRONTEND SERVER CHECK
+Frontend HTTP Status: 200
+
+[9] SWAGGER API CHECK
+Swagger HTTP Status: 200
+
+========================================
+ AUDIT FINISHED
+========================================
+**********************
+Windows PowerShell transcript end
+End time: 20261102230702
+**********************

@@ -6,7 +6,13 @@ Place your trained model files here. They are excluded from git (see `.gitignore
 
 Filename: `plant_disease_model.keras`  (or `.h5`)
 
-Train or download a CNN trained on the **PlantVillage** dataset (38 classes, 87k images).
+Train the MobileNetV2 model on the real **PlantVillage** dataset with
+`backend/train_plant_disease_cnn.py`. Training creates the configured model
+file plus adjacent `.classes.json` and `.metrics.json` files. The class file
+keeps inference labels aligned with the output neurons; the metrics file
+records held-out accuracy, macro precision/recall/F1, and the confusion matrix.
+Training results depend on the dataset and run; do not infer them from the
+untrained starter model.
 
 ### Quick training recipe (Google Colab / local GPU)
 
@@ -37,7 +43,8 @@ model.compile('adam', 'categorical_crossentropy', ['accuracy'])
 model.save('ml_models/plant_disease_model.keras')
 ```
 
-Set `.env`:
+Set `.env` (the trainer uses the configured model path and does not edit this
+file):
 ```
 DISEASE_MODEL_MODE=production
 DISEASE_MODEL_PATH=ml_models/plant_disease_model.keras

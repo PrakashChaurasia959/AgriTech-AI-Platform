@@ -5,11 +5,11 @@
  *  1. "Detect My Location" button uses the browser Geolocation API to get
  *     the user's real latitude / longitude.
  *  2. After geolocation succeeds the page calls GET /api/crop/live-weather,
- *     which calls OpenWeatherMap on the backend, and auto-fills the
+ *     which calls OpenWeatherMap or its Open-Meteo fallback, and auto-fills the
  *     Temperature, Humidity, and Rainfall sliders with live values.
  *  3. The city name returned by OpenWeatherMap is placed into the Location field.
- *  4. If the backend has no OWM API key configured (501) the page shows a
- *     friendly notice and leaves sliders in manual mode — nothing breaks.
+ *  4. If OpenWeatherMap is unavailable, the backend uses its Open-Meteo
+ *     fallback so weather auto-fill remains available.
  *  5. All manual slider edits still work normally after auto-fill.
  */
 
@@ -55,9 +55,9 @@ export default function CropRecommendation() {
 
   // Geolocation + live weather state
   const [locating, setLocating]   = useState(false);      // browser geo lookup running
-  const [weatherFetching, setWeatherFetching] = useState(false); // OWM call running
+  const [weatherFetching, setWeatherFetching] = useState(false); // weather call running
   const [liveWeatherOk, setLiveWeatherOk]     = useState<boolean | null>(null);
-  // null = not tried, true = success, false = no OWM key / error
+  // null = not tried, true = success, false = provider unavailable
 
   /** ------------------------------------------------------------------
    *  Step 1: Ask the browser for the user's GPS coordinates.
@@ -83,12 +83,10 @@ export default function CropRecommendation() {
           setWeatherFetching(false);
 
           if (weather === null) {
-            // 501 — OWM key not configured
+            // Weather providers unavailable — keep manual controls usable.
             setLiveWeatherOk(false);
             toast(
-              'Live weather auto-fill is not configured.\n' +
-              'Set OPENWEATHER_API_KEY in backend .env to enable it.\n' +
-              'You can adjust sliders manually.',
+              'Live weather is currently unavailable. You can adjust the sliders manually.',
               { icon: '⚙️', duration: 6000 }
             );
           } else {
@@ -100,8 +98,11 @@ export default function CropRecommendation() {
               rainfall:    Math.min(weather.rainfall * 30, 500), // 1-hour rain → monthly est.
               location:    weather.city,
             }));
+            const weatherSource = weather.source === 'open-meteo'
+              ? 'Open-Meteo fallback'
+              : 'OpenWeatherMap';
             toast.success(
-              `Weather fetched for ${weather.city}: ` +
+              `${weatherSource} data for ${weather.city}: ` +
               `${weather.temperature}°C, ${weather.humidity}% RH — sliders updated!`,
               { duration: 5000 }
             );
@@ -236,7 +237,7 @@ export default function CropRecommendation() {
             <p className="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
               Click <strong>Detect</strong> to auto-fill Temperature, Humidity &amp; Rainfall with live data
-              {liveWeatherOk === false && ' — add OPENWEATHER_API_KEY in .env to enable'}.
+              {liveWeatherOk === false && ' — weather data is temporarily unavailable'}.
             </p>
           </div>
 

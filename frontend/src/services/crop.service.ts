@@ -8,6 +8,7 @@ export interface LiveWeather {
   rainfall: number;
   description: string;
   city: string;
+  source: 'openweathermap' | 'open-meteo';
 }
 
 export const cropService = {
@@ -17,9 +18,8 @@ export const cropService = {
   },
 
   /**
-   * Fetch live weather from the backend (which calls OpenWeatherMap).
-   * Returns null when the API key is not configured (501) — callers
-   * must handle the null case gracefully.
+   * Fetch live weather from the backend, which falls back to Open-Meteo
+   * when OpenWeatherMap is not configured or rejects its key.
    */
   async getLiveWeather(lat: number, lon: number): Promise<LiveWeather | null> {
     try {
@@ -29,7 +29,7 @@ export const cropService = {
       return res.data;
     } catch (err: any) {
       if (err.response?.status === 501) {
-        // OpenWeatherMap key not configured — this is expected in dev
+        // Preserve manual weather entry if the backend cannot provide data.
         return null;
       }
       throw err;

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Smart Agriculture Backend - FastAPI Application Entry Point.
 
 This module creates the FastAPI app, configures CORS, connects to MongoDB,
@@ -15,9 +15,10 @@ from app.core.database import connect_to_mongo, close_mongo_connection, get_db
 from app.core import database as db_module
 from app.core.security import get_password_hash
 
-from app.api import auth, users, disease, crop, yield_api, weather, admin
+from app.api import auth, users, disease, crop, yield_api, weather, admin, system_status
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -47,17 +48,40 @@ async def create_admin_user() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: connect to DB on startup, close on shutdown."""
+    import asyncio, os
     logger.info("=== Smart Agriculture API Starting ===")
     await connect_to_mongo()
     await create_admin_user()
 
-    # Pre-train ML models (or load from disk)
+    # Pre-load ML models (all run in a thread to avoid blocking the event loop)
     from app.ml.crop_model import recommender
     from app.ml.yield_model import predictor
-    logger.info("Loading ML models...")
-    recommender.load_or_train()
-    predictor.load_or_train()
-    logger.info("ML models ready.")
+    logger.info("Loading crop + yield ML models...")
+    await asyncio.to_thread(recommender.load_or_train)
+    await asyncio.to_thread(predictor.load_or_train)
+    logger.info("Crop + yield models ready.")
+
+    # Pre-load disease CNN if production mode is configured
+    from app.core.config import settings as cfg
+    if cfg.DISEASE_MODEL_MODE.lower() == "production":
+        from app.ml.disease_model import _load_keras_model, _keras_model, _model_load_error
+        logger.info("Production mode: loading Keras CNN disease model at startup â€¦")
+        await asyncio.to_thread(_load_keras_model)
+        # Re-import to get updated values after the thread ran
+        from app.ml import disease_model as dm
+        if dm._keras_model is not None:
+            logger.info(
+                "CNN disease model loaded â€” input: %s | classes: %s",
+                dm._keras_model.input_shape,
+                dm._keras_model.output_shape[-1],
+            )
+        else:
+            logger.warning(
+                "CNN disease model could NOT be loaded: %s â€” demo fallback active.",
+                dm._model_load_error,
+            )
+    else:
+        logger.info("Disease detection: demo mode (set DISEASE_MODEL_MODE=production to use CNN).")
 
     logger.info("=== Smart Agriculture API Ready ===")
     yield
@@ -92,6 +116,7 @@ app.include_router(crop.router, prefix=API_PREFIX)
 app.include_router(yield_api.router, prefix=API_PREFIX)
 app.include_router(weather.router, prefix=API_PREFIX)
 app.include_router(admin.router, prefix=API_PREFIX)
+app.include_router(system_status.router)
 
 
 @app.get("/", tags=["Root"])
@@ -116,7 +141,7 @@ async def root():
 
 @app.get("/health", tags=["Health"])
 async def health():
-    """Health check endpoint — reports database connection status."""
+    """Health check endpoint â€” reports database connection status."""
     db = get_db()
     return {
         "status": "healthy",

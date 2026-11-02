@@ -1,3 +1,5 @@
+﻿import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 """
 Comprehensive Playwright browser automation test suite.
 Fixes from run 1:
@@ -32,21 +34,21 @@ test_user_password = "QaPass12345"
 
 def P(name):
     results["passed"].append(name)
-    print(f"  ✅  {name}")
+    print(f"  âœ…  {name}")
 
 def F(name, err=""):
     results["failed"].append({"test": name, "error": str(err)[:300]})
-    print(f"  ❌  {name}: {str(err)[:200]}")
+    print(f"  âŒ  {name}: {str(err)[:200]}")
 
 def W(name, msg=""):
     results["warnings"].append({"test": name, "msg": str(msg)[:200]})
-    print(f"  ⚠   {name}: {str(msg)[:200]}")
+    print(f"  âš    {name}: {str(msg)[:200]}")
 
 async def shot(page, name):
     p = SCREENSHOT_DIR / f"{name}.png"
     await page.screenshot(path=str(p), full_page=False)
     results["screenshots"].append(str(p))
-    print(f"  📸  {name}.png")
+    print(f"  ðŸ“¸  {name}.png")
 
 async def inject_auth(page: Page, token: str):
     """Inject JWT token into localStorage so React picks it up."""
@@ -66,18 +68,18 @@ async def setup_listeners(page: Page):
             text = msg.text[:300]
             results["console_errors"].append({"type": msg.type, "text": text})
             if msg.type == "error":
-                print(f"  🔧  CONSOLE {msg.type.upper()}: {text[:150]}")
+                print(f"  ðŸ”§  CONSOLE {msg.type.upper()}: {text[:150]}")
     def on_response(resp):
         if resp.status >= 400 and "/hot" not in resp.url:
             results["failed_requests"].append({"url": resp.url[:200], "status": resp.status})
             if resp.status != 401:   # 401 on bad login is expected
-                print(f"  🌐  [{resp.status}] {resp.url[:120]}")
+                print(f"  ðŸŒ  [{resp.status}] {resp.url[:120]}")
     page.on("console", on_console)
     page.on("response", on_response)
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  STEP 0: Get real tokens from the API
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def step_get_tokens():
     global admin_token, test_user_token
     print("\n=== STEP 0: Obtain Auth Tokens ===")
@@ -115,9 +117,9 @@ async def step_get_tokens():
                 F("Atlas persistence check", r2.text[:100])
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 1: Landing Page
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_landing(page: Page):
     print("\n=== TEST 1: Landing Page ===")
     try:
@@ -154,9 +156,9 @@ async def test_landing(page: Page):
         F("Landing page", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 2: Login Page
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_login_page(page: Page):
     print("\n=== TEST 2: Login Page ===")
     try:
@@ -205,9 +207,9 @@ async def test_login_page(page: Page):
         F("Login page test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 3: Registration
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_register_page(page: Page):
     print("\n=== TEST 3: Registration Page ===")
     try:
@@ -227,7 +229,7 @@ async def test_register_page(page: Page):
         await page.locator('button[type="submit"]').click()
         await page.wait_for_timeout(5000)
 
-        if "/app" in page.url:      P(f"Registration → dashboard ({new_email})")
+        if "/app" in page.url:      P(f"Registration â†’ dashboard ({new_email})")
         else:                       F("Registration redirect", f"URL={page.url}")
 
         # Password mismatch test
@@ -263,9 +265,9 @@ async def test_register_page(page: Page):
         F("Registration page test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 4: Authenticated Login
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_login_flow(page: Page):
     print("\n=== TEST 4: Login Flow ===")
     try:
@@ -284,30 +286,30 @@ async def test_login_flow(page: Page):
         await page.locator('input[type="password"]').fill("admin123456")
         await page.locator('button[type="submit"]').click()
         await page.wait_for_timeout(5000)
-        if "/app" in page.url:      P("Admin login → dashboard")
+        if "/app" in page.url:      P("Admin login â†’ dashboard")
         else:                       F("Admin login redirect", page.url)
         await shot(page, "07_after_login_dashboard")
     except Exception as e:
         F("Login flow test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  Helper: Navigate to protected page with auth injected
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def goto_protected(page: Page, path: str, token: str = None):
     """Go to BASE_URL/path with auth pre-injected."""
     tok = token or admin_token
     # First load any page to have a context, then inject, then navigate
     await page.goto(BASE_URL, wait_until="domcontentloaded", timeout=15000)
     await inject_auth(page, tok)
-    # Use domcontentloaded — Vite's HMR WebSocket prevents "networkidle" from settling
+    # Use domcontentloaded â€” Vite's HMR WebSocket prevents "networkidle" from settling
     await page.goto(f"{BASE_URL}{path}", wait_until="domcontentloaded", timeout=20000)
     await page.wait_for_timeout(3000)  # wait for React rendering and API calls
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 5: Dashboard
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_dashboard(page: Page):
     print("\n=== TEST 5: Dashboard ===")
     try:
@@ -315,7 +317,7 @@ async def test_dashboard(page: Page):
 
         # Verify not redirected to login
         if "login" in page.url:
-            F("Dashboard auth", "Redirected to login — auth injection failed")
+            F("Dashboard auth", "Redirected to login â€” auth injection failed")
             return
 
         welcome = page.locator("text=/Welcome back/i").first
@@ -362,9 +364,9 @@ async def test_dashboard(page: Page):
         F("Dashboard test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 6: Disease Detection
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_disease_detection(page: Page):
     print("\n=== TEST 6: Disease Detection ===")
     try:
@@ -435,7 +437,7 @@ async def test_disease_detection(page: Page):
         else:
             F("File input not found")
 
-        # Invalid file test — should show toast error
+        # Invalid file test â€” should show toast error
         import tempfile as tf
         invalid_tmp = tf.NamedTemporaryFile(suffix=".pdf", delete=False)
         invalid_tmp.write(b"%PDF-1.4 fake content")
@@ -455,9 +457,9 @@ async def test_disease_detection(page: Page):
         F("Disease detection test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 7: Crop Recommendation
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_crop_recommendation(page: Page):
     print("\n=== TEST 7: Crop Recommendation ===")
     try:
@@ -532,9 +534,9 @@ async def test_crop_recommendation(page: Page):
         F("Crop recommendation test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 8: Yield Prediction
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_yield_prediction(page: Page):
     print("\n=== TEST 8: Yield Prediction ===")
     try:
@@ -598,9 +600,9 @@ async def test_yield_prediction(page: Page):
         F("Yield prediction test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 9: Weather Forecast
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_weather(page: Page):
     print("\n=== TEST 9: Weather Forecast ===")
     try:
@@ -621,9 +623,9 @@ async def test_weather(page: Page):
             await page.wait_for_timeout(6000)
 
             # Check temperature
-            temp = page.locator("text=/°C/").first
+            temp = page.locator("text=/Â°C/").first
             if await temp.count():  P("Temperature displayed after search")
-            else:                   W("Temperature", "°C not found after search")
+            else:                   W("Temperature", "Â°C not found after search")
 
             # Check weather description
             desc = page.locator("text=/Clear sky|Cloudy|Rain|Overcast|Fog/i").first
@@ -645,9 +647,9 @@ async def test_weather(page: Page):
         F("Weather test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 10: History Page
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_history(page: Page):
     print("\n=== TEST 10: History ===")
     try:
@@ -694,9 +696,9 @@ async def test_history(page: Page):
         F("History test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 11: Profile Page
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_profile(page: Page):
     print("\n=== TEST 11: Profile ===")
     try:
@@ -734,9 +736,9 @@ async def test_profile(page: Page):
         F("Profile test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 12: Settings Page
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_settings(page: Page):
     print("\n=== TEST 12: Settings ===")
     try:
@@ -775,9 +777,9 @@ async def test_settings(page: Page):
         F("Settings test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 13: Admin Dashboard
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_admin(page: Page):
     print("\n=== TEST 13: Admin Dashboard ===")
     try:
@@ -823,9 +825,9 @@ async def test_admin(page: Page):
         F("Admin test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 14: Responsive Layouts
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_responsive(page: Page):
     print("\n=== TEST 14: Responsive Layouts ===")
     try:
@@ -852,9 +854,9 @@ async def test_responsive(page: Page):
         F("Responsive test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  TEST 15: Logout
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def test_logout(page: Page):
     print("\n=== TEST 15: Logout ===")
     try:
@@ -864,7 +866,7 @@ async def test_logout(page: Page):
             await logout_btn.click()
             await page.wait_for_timeout(3000)
             if "/" == page.url.replace(BASE_URL, "").rstrip("/") or "login" in page.url:
-                P("Logout → landing/login page")
+                P("Logout â†’ landing/login page")
             else:
                 W("Logout URL", page.url)
 
@@ -883,9 +885,9 @@ async def test_logout(page: Page):
         F("Logout test", e)
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  STEP FINAL: Backend API checks
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def step_api_checks():
     print("\n=== STEP FINAL: API Endpoint Checks ===")
     async with httpx.AsyncClient(base_url=API_URL, timeout=20) as client:
@@ -912,7 +914,7 @@ async def step_api_checks():
                 else:
                     r = await client.post(path, json=body, headers=hdrs)
                 if r.status_code == expected:
-                    P(f"API {method} {path} → {r.status_code}")
+                    P(f"API {method} {path} â†’ {r.status_code}")
                 else:
                     F(f"API {method} {path}", f"Expected {expected}, got {r.status_code}")
             except Exception as e:
@@ -925,7 +927,7 @@ async def step_api_checks():
             "rainfall": 120, "soil_type": "Loamy", "location": "Punjab",
         }, headers=hdrs)
         if r.status_code == 200 and "recommendations" in r.json():
-            P(f"API POST /api/crop/recommend → top: {r.json()['top_recommendation']}")
+            P(f"API POST /api/crop/recommend â†’ top: {r.json()['top_recommendation']}")
         else:
             F("API crop recommend", r.text[:100])
 
@@ -936,18 +938,18 @@ async def step_api_checks():
             "soil_type": "Loamy", "fertilizer_usage": 100,
         }, headers=hdrs)
         if r.status_code == 200 and "predicted_yield" in r.json():
-            P(f"API POST /api/yield/predict → {r.json()['predicted_yield']:.0f} kg/ha")
+            P(f"API POST /api/yield/predict â†’ {r.json()['predicted_yield']:.0f} kg/ha")
         else:
             F("API yield predict", r.text[:100])
 
-        # POST auth register (duplicate → 409)
+        # POST auth register (duplicate â†’ 409)
         r = await client.post("/api/auth/register", json={
             "full_name": "Dup", "email": "admin@smartagri.com",
             "mobile_number": "0000000000", "password": "test",
             "confirm_password": "test",
         })
         if r.status_code == 409:
-            P("Duplicate email registration → 409 Conflict")
+            P("Duplicate email registration â†’ 409 Conflict")
         else:
             W("Duplicate email check", f"Got {r.status_code}")
 
@@ -958,7 +960,7 @@ async def step_api_checks():
             "rainfall": 120, "soil_type": "Loamy", "location": "",
         }, headers=hdrs)
         if r.status_code == 422:
-            P("Invalid crop input (N=999) → 422 Validation Error")
+            P("Invalid crop input (N=999) â†’ 422 Validation Error")
         else:
             W("Crop validation", f"Expected 422, got {r.status_code}")
 
@@ -967,17 +969,17 @@ async def step_api_checks():
                              headers=hdrs)
         if r.status_code == 200 and "current" in r.json():
             curr = r.json()["current"]
-            P(f"Weather API → {curr['weather_description']} {curr['temperature']}°C at Mumbai")
+            P(f"Weather API â†’ {curr['weather_description']} {curr['temperature']}Â°C at Mumbai")
         else:
             F("Weather API", r.text[:100])
 
 
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  MAIN
-# ─────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def main():
     print("=" * 64)
-    print("  SmartAgri ML — Full Automated Test Suite  v2")
+    print("  SmartAgri ML â€” Full Automated Test Suite  v2")
     print("=" * 64)
 
     await step_get_tokens()
@@ -1008,7 +1010,7 @@ async def main():
 
     await step_api_checks()
 
-    # ── Summary ──────────────────────────────────────────────
+    # â”€â”€ Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     total = len(results["passed"]) + len(results["failed"])
     console_errs_real  = [e for e in results["console_errors"] if e["type"] == "error"]
     console_warns      = [e for e in results["console_errors"] if e["type"] == "warning"]
@@ -1018,27 +1020,27 @@ async def main():
     print("  FINAL TEST RESULTS")
     print("=" * 64)
     print(f"  Total checks : {total}")
-    print(f"  ✅ Passed     : {len(results['passed'])}")
-    print(f"  ❌ Failed     : {len(results['failed'])}")
-    print(f"  ⚠  Warnings   : {len(results['warnings'])}")
-    print(f"  🔴 Console ERR: {len(console_errs_real)}")
-    print(f"  🟡 Console WRN: {len(console_warns)}")
-    print(f"  🌐 Failed reqs: {len(failed_real)}  (401 on bad-login excluded)")
-    print(f"  📸 Screenshots: {len(results['screenshots'])}")
+    print(f"  âœ… Passed     : {len(results['passed'])}")
+    print(f"  âŒ Failed     : {len(results['failed'])}")
+    print(f"  âš   Warnings   : {len(results['warnings'])}")
+    print(f"  ðŸ”´ Console ERR: {len(console_errs_real)}")
+    print(f"  ðŸŸ¡ Console WRN: {len(console_warns)}")
+    print(f"  ðŸŒ Failed reqs: {len(failed_real)}  (401 on bad-login excluded)")
+    print(f"  ðŸ“¸ Screenshots: {len(results['screenshots'])}")
     print("=" * 64)
 
     if results["failed"]:
-        print("\n  ❌ FAILED TESTS:")
+        print("\n  âŒ FAILED TESTS:")
         for f in results["failed"]:
-            print(f"     • {f['test']}: {f['error'][:120]}")
+            print(f"     â€¢ {f['test']}: {f['error'][:120]}")
 
     if results["warnings"]:
-        print("\n  ⚠  WARNINGS:")
+        print("\n  âš   WARNINGS:")
         for w in results["warnings"]:
-            print(f"     • {w['test']}: {w['msg'][:120]}")
+            print(f"     â€¢ {w['test']}: {w['msg'][:120]}")
 
     if console_errs_real:
-        print("\n  🔴 REAL CONSOLE ERRORS:")
+        print("\n  ðŸ”´ REAL CONSOLE ERRORS:")
         seen = set()
         for e in console_errs_real:
             if e["text"][:80] not in seen:
@@ -1046,7 +1048,7 @@ async def main():
                 seen.add(e["text"][:80])
 
     if failed_real:
-        print("\n  🌐 UNEXPECTED FAILED REQUESTS:")
+        print("\n  ðŸŒ UNEXPECTED FAILED REQUESTS:")
         for r in failed_real[:10]:
             print(f"     [{r['status']}] {r['url'][:120]}")
 
@@ -1054,7 +1056,7 @@ async def main():
     results_path = SCREENSHOT_DIR / "test_results_v2.json"
     with open(results_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\n  📄 Full results → {results_path}")
+    print(f"\n  ðŸ“„ Full results â†’ {results_path}")
     print("=" * 64)
 
     return results
@@ -1062,3 +1064,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
